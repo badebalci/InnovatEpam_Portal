@@ -7,6 +7,7 @@ public class IdeaResponse
     public string Description { get; set; } = string.Empty;
     public string Category { get; set; } = string.Empty;
     public string Status { get; set; } = string.Empty;
+    public int SubmitterId { get; set; }
     public string SubmitterName { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }

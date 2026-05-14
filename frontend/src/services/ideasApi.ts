@@ -25,6 +25,15 @@ export const ideasApi = {
     return res.data
   },
 
+  async updateDraft(id: number, formData: FormData) {
+    const res = await api.patch<IdeaDetail>(`/ideas/${id}`, formData)
+    return res.data
+  },
+
+  async deleteIdea(id: number) {
+    await api.delete(`/ideas/${id}`)
+  },
+
   async downloadAttachment(ideaId: number, attachmentId: number, fileName: string) {
     const res = await api.get(`/ideas/${ideaId}/attachment/${attachmentId}`, { responseType: 'blob' })
     const url = URL.createObjectURL(res.data)

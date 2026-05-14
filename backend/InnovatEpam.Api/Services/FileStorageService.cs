@@ -40,4 +40,11 @@ public class FileStorageService(IConfiguration configuration, ILogger<FileStorag
 
         return null;
     }
+
+    public void DeleteIdeaDirectory(int ideaId)
+    {
+        var dir = Path.Combine(_uploadRoot, ideaId.ToString());
+        if (Directory.Exists(dir))
+            Directory.Delete(dir, recursive: true);
+    }
 }

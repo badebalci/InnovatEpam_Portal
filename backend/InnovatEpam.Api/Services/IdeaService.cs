@@ -34,7 +34,7 @@ public class IdeaService(AppDbContext db, FileStorageService fileStorage)
             Title = request.Title.Trim(),
             Description = request.Description.Trim(),
             Category = request.Category,
-            Status = IdeaStatus.Submitted,
+            Status = request.SaveAsDraft ? IdeaStatus.Draft : IdeaStatus.Submitted,
             SubmitterId = submitterId
         };
 
@@ -77,6 +77,8 @@ public class IdeaService(AppDbContext db, FileStorageService fileStorage)
 
         if (role == "Submitter")
             query = query.Where(i => i.SubmitterId == userId);
+        else
+            query = query.Where(i => i.Status != IdeaStatus.Draft); // admins never see drafts
 
         if (!string.IsNullOrWhiteSpace(search))
             query = query.Where(i => i.Title.Contains(search) || i.Description.Contains(search));
@@ -124,6 +126,10 @@ public class IdeaService(AppDbContext db, FileStorageService fileStorage)
 
         if (idea is null) return (null, false);
 
+        // AdminEvaluators cannot see draft ideas
+        if (role == "AdminEvaluator" && idea.Status == IdeaStatus.Draft)
+            return (null, false);
+
         if (role == "Submitter" && idea.SubmitterId != userId)
             return (null, true); // Forbidden
 
@@ -137,6 +143,7 @@ public class IdeaService(AppDbContext db, FileStorageService fileStorage)
         Description = idea.Description,
         Category = idea.Category.ToString(),
         Status = idea.Status.ToString(),
+        SubmitterId = idea.SubmitterId,
         SubmitterName = submitter.FullName,
         CreatedAt = idea.CreatedAt,
         UpdatedAt = idea.UpdatedAt,
@@ -153,6 +160,73 @@ public class IdeaService(AppDbContext db, FileStorageService fileStorage)
             DecidedAt = idea.Evaluation.DecidedAt
         }
     };
+
+    public async Task<(IdeaResponse? Response, string? Error, bool Forbidden)> UpdateDraftAsync(
+        int id, UpdateIdeaRequest request, int userId)
+    {
+        var idea = await db.Ideas
+            .Include(i => i.Attachments)
+            .FirstOrDefaultAsync(i => i.Id == id);
+
+        if (idea is null) return (null, "Idea not found.", false);
+        if (idea.SubmitterId != userId) return (null, null, true);
+        if (idea.Status != IdeaStatus.Draft && idea.Status != IdeaStatus.Submitted)
+            return (null, "Only Draft or Submitted ideas can be edited.", false);
+
+        var newFiles = request.NewFiles ?? [];
+        var totalAttachments = idea.Attachments.Count + newFiles.Count;
+
+        if (totalAttachments > AppConstants.MaxAttachmentsPerIdea)
+            return (null, $"Maximum {AppConstants.MaxAttachmentsPerIdea} attachments allowed.", false);
+
+        foreach (var file in newFiles)
+        {
+            var (valid, error) = fileStorage.ValidateFile(file);
+            if (!valid) return (null, error, false);
+        }
+
+        idea.Title = request.Title.Trim();
+        idea.Description = request.Description.Trim();
+        idea.Category = request.Category;
+        idea.UpdatedAt = DateTime.UtcNow;
+
+        foreach (var file in newFiles)
+        {
+            var storagePath = await fileStorage.SaveAsync(file, idea.Id);
+            db.Attachments.Add(new Attachment
+            {
+                IdeaId = idea.Id,
+                OriginalFileName = Path.GetFileName(file.FileName),
+                StoragePath = storagePath,
+                ContentType = file.ContentType,
+                FileSizeBytes = file.Length
+            });
+        }
+
+        // Only promote a Draft to Submitted; a Submitted idea stays Submitted
+        if (request.Submit && idea.Status == IdeaStatus.Draft)
+            idea.Status = IdeaStatus.Submitted;
+
+        await db.SaveChangesAsync();
+        idea.Attachments = await db.Attachments.Where(a => a.IdeaId == id).ToListAsync();
+
+        var submitter = await db.Users.FindAsync(userId);
+        return (MapToResponse(idea, submitter!), null, false);
+    }
+
+    public async Task<(string? Error, bool Forbidden)> DeleteAsync(int id, int userId)
+    {
+        var idea = await db.Ideas.FindAsync(id);
+        if (idea is null) return ("Idea not found.", false);
+        if (idea.SubmitterId != userId) return (null, true);
+        if (idea.Status != IdeaStatus.Draft && idea.Status != IdeaStatus.Submitted)
+            return ("Only Draft or Submitted ideas can be deleted.", false);
+
+        fileStorage.DeleteIdeaDirectory(idea.Id);
+        db.Ideas.Remove(idea);
+        await db.SaveChangesAsync();
+        return (null, false);
+    }
 
     public async Task<(string? StoragePath, string? FileName, string? ContentType, bool Forbidden)> GetAttachmentAsync(
         int ideaId, int attachmentId, int userId, string role)

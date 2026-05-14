@@ -98,7 +98,9 @@ export function IdeaSubmitForm() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [globalError, setGlobalError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [savingDraft, setSavingDraft] = useState(false);
   const [successId, setSuccessId] = useState<number | null>(null);
+  const [savedAsDraft, setSavedAsDraft] = useState(false);
 
   function setCF(key: keyof CategoryFields, value: string) {
     setCategoryFields((prev) => ({ ...prev, [key]: value }));
@@ -166,6 +168,14 @@ export function IdeaSubmitForm() {
     });
   }
 
+  function validateDraft() {
+    const errs: Record<string, string> = {};
+    if (!title.trim()) errs.title = "Title is required.";
+    if (!description.trim()) errs.description = "Description is required.";
+    if (!category) errs.category = "Category is required.";
+    return errs;
+  }
+
   function validate() {
     const errs: Record<string, string> = {};
     if (!title.trim()) errs.title = "Title is required.";
@@ -224,6 +234,7 @@ export function IdeaSubmitForm() {
     try {
       const idea = await ideasApi.createIdea(formData);
       setSuccessId(idea.id);
+      setSavedAsDraft(false);
       setTitle("");
       setDescription("");
       setCategory("");
@@ -251,14 +262,73 @@ export function IdeaSubmitForm() {
     }
   }
 
+  async function handleSaveAsDraft(e: React.MouseEvent) {
+    e.preventDefault();
+    const draftErrors = validateDraft();
+    if (Object.keys(draftErrors).length) {
+      setErrors(draftErrors);
+      return;
+    }
+    setErrors({});
+    setGlobalError(null);
+    setSavingDraft(true);
+
+    const fullDescription = buildDescription(
+      description,
+      category,
+      categoryFields,
+    );
+    const formData = new FormData();
+    formData.append("title", title.trim());
+    formData.append("description", fullDescription);
+    formData.append("category", category);
+    formData.append("saveDraft", "true");
+    for (const f of files) formData.append("files", f);
+
+    try {
+      const idea = await ideasApi.createIdea(formData);
+      setSuccessId(idea.id);
+      setSavedAsDraft(true);
+      setTitle("");
+      setDescription("");
+      setCategory("");
+      setCategoryFields(EMPTY_CATEGORY_FIELDS);
+      setFiles([]);
+    } catch (err: unknown) {
+      const resp = (
+        err as {
+          response?: {
+            data?: { errors?: Record<string, string[]>; error?: string };
+          };
+        }
+      )?.response?.data;
+      setGlobalError(resp?.error ?? "Failed to save draft.");
+    } finally {
+      setSavingDraft(false);
+    }
+  }
+
   if (successId !== null) {
     return (
-      <div className="rounded-lg border bg-green-50 p-6 text-center space-y-4">
-        <p className="text-lg font-semibold text-green-700">
-          Idea submitted! Reference #{successId}
+      <div
+        className={`rounded-lg border p-6 text-center space-y-4 ${savedAsDraft ? "bg-gray-50" : "bg-green-50"}`}
+      >
+        <p
+          className={`text-lg font-semibold ${savedAsDraft ? "text-gray-700" : "text-green-700"}`}
+        >
+          {savedAsDraft
+            ? `Draft saved! Reference #${successId}`
+            : `Idea submitted! Reference #${successId}`}
         </p>
         <div className="flex justify-center gap-3">
-          <Button onClick={() => setSuccessId(null)}>Submit Another</Button>
+          <Button
+            onClick={() => {
+              setSuccessId(null);
+              setSavedAsDraft(false);
+            }}
+          >
+            {savedAsDraft ? "Edit Another" : "Submit Another"}
+          </Button>
           <Button variant="outline" onClick={() => navigate("/my-ideas")}>
             View My Ideas
           </Button>
@@ -547,9 +617,24 @@ export function IdeaSubmitForm() {
         )}
       </div>
 
-      <Button type="submit" className="w-full" disabled={submitting}>
-        {submitting ? "Submitting…" : "Submit Idea"}
-      </Button>
+      <div className="flex gap-3">
+        <Button
+          type="button"
+          variant="outline"
+          className="flex-1"
+          disabled={savingDraft || submitting}
+          onClick={handleSaveAsDraft}
+        >
+          {savingDraft ? "Saving…" : "Save as Draft"}
+        </Button>
+        <Button
+          type="submit"
+          className="flex-1"
+          disabled={submitting || savingDraft}
+        >
+          {submitting ? "Submitting…" : "Submit Idea"}
+        </Button>
+      </div>
     </form>
   );
 }

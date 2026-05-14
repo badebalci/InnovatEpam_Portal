@@ -7,8 +7,12 @@ interface IdeaStatusBadgeProps {
 
 const statusConfig: Record<
   IdeaStatus,
-  { label: string; variant: "info" | "warning" | "success" | "destructive" }
+  {
+    label: string;
+    variant: "info" | "warning" | "success" | "destructive" | "secondary";
+  }
 > = {
+  Draft: { label: "Draft", variant: "secondary" },
   Submitted: { label: "Submitted", variant: "info" },
   UnderReview: { label: "Under Review", variant: "warning" },
   Accepted: { label: "Accepted", variant: "success" },

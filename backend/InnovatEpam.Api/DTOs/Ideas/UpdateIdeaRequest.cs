@@ -3,7 +3,7 @@ using InnovatEpam.Api.Models;
 
 namespace InnovatEpam.Api.DTOs.Ideas;
 
-public class CreateIdeaRequest
+public class UpdateIdeaRequest
 {
     [Required, MaxLength(200), MinLength(1)]
     public string Title { get; set; } = string.Empty;
@@ -14,7 +14,8 @@ public class CreateIdeaRequest
     [Required]
     public IdeaCategory Category { get; set; }
 
-    public bool SaveAsDraft { get; set; }
+    /// <summary>When true, changes the draft status to Submitted.</summary>
+    public bool Submit { get; set; }
 
-    public List<IFormFile>? Files { get; set; }
+    public List<IFormFile>? NewFiles { get; set; }
 }

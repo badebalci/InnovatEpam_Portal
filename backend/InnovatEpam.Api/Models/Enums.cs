@@ -17,6 +17,7 @@ public enum IdeaCategory
 
 public enum IdeaStatus
 {
+    Draft,
     Submitted,
     UnderReview,
     Accepted,

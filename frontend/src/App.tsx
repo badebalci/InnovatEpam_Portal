@@ -1,12 +1,13 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
-import { AuthProvider } from "./context/AuthContext"
-import { ProtectedRoute } from "./components/layout/ProtectedRoute"
-import { LoginPage } from "./pages/LoginPage"
-import { RegisterPage } from "./pages/RegisterPage"
-import { MyIdeasPage } from "./pages/MyIdeasPage"
-import { IdeaSubmitPage } from "./pages/IdeaSubmitPage"
-import { IdeaDetailPage } from "./pages/IdeaDetailPage"
-import { AdminDashboard } from "./pages/AdminDashboard"
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider } from "./context/AuthContext";
+import { ProtectedRoute } from "./components/layout/ProtectedRoute";
+import { LoginPage } from "./pages/LoginPage";
+import { RegisterPage } from "./pages/RegisterPage";
+import { MyIdeasPage } from "./pages/MyIdeasPage";
+import { IdeaSubmitPage } from "./pages/IdeaSubmitPage";
+import { IdeaDetailPage } from "./pages/IdeaDetailPage";
+import { IdeaEditPage } from "./pages/IdeaEditPage";
+import { AdminDashboard } from "./pages/AdminDashboard";
 
 export default function App() {
   return (
@@ -34,8 +35,16 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/ideas/:id/edit"
+            element={
+              <ProtectedRoute allowedRoles={["Submitter"]}>
+                <IdeaEditPage />
+              </ProtectedRoute>
+            }
+          />
 
-          {/* Shared — both roles can view idea detail */}
+          {/* Shared ï¿½ both roles can view idea detail */}
           <Route
             path="/ideas/:id"
             element={
@@ -61,5 +70,5 @@ export default function App() {
         </Routes>
       </BrowserRouter>
     </AuthProvider>
-  )
+  );
 }

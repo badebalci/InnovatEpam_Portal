@@ -1,6 +1,6 @@
 export type Role = 'Submitter' | 'AdminEvaluator'
 
-export type IdeaStatus = 'Submitted' | 'UnderReview' | 'Accepted' | 'Rejected'
+export type IdeaStatus = 'Draft' | 'Submitted' | 'UnderReview' | 'Accepted' | 'Rejected'
 
 export type IdeaCategory = 'Technology' | 'Process' | 'Product' | 'People' | 'Other'
 
@@ -40,6 +40,7 @@ export interface IdeaDetail {
   description: string
   category: IdeaCategory
   status: IdeaStatus
+  submitterId: number
   submitterName: string
   createdAt: string
   updatedAt: string

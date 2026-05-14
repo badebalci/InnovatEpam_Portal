@@ -1,9 +1,11 @@
 import { useEffect, useState, Fragment } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { ideasApi } from "../services/ideasApi";
 import type { IdeaDetail } from "../types";
+import { useAuth } from "../hooks/useAuth";
 import { AppShell } from "../components/layout/AppShell";
 import { IdeaStatusBadge } from "../components/ideas/IdeaStatusBadge";
+import { Button } from "../components/ui/button";
 import { Skeleton } from "../components/ui/skeleton";
 
 /** Renders text that may contain **bold** markers and newlines as JSX. */
@@ -28,9 +30,13 @@ function renderDescription(text: string) {
 export function IdeaDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [idea, setIdea] = useState<IdeaDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -46,6 +52,30 @@ export function IdeaDetailPage() {
       })
       .finally(() => setLoading(false));
   }, [id]);
+
+  const isOwner = !!user && !!idea && user.id === idea.submitterId;
+  const canEdit =
+    isOwner && (idea.status === "Draft" || idea.status === "Submitted");
+  const canDelete =
+    isOwner && (idea.status === "Draft" || idea.status === "Submitted");
+
+  async function handleDelete() {
+    if (!idea) return;
+    setDeleting(true);
+    setDeleteError(null);
+    try {
+      await ideasApi.deleteIdea(idea.id);
+      navigate("/my-ideas");
+    } catch (err: unknown) {
+      const msg =
+        (err as { response?: { data?: { error?: string } } })?.response?.data
+          ?.error ?? "Failed to delete idea.";
+      setDeleteError(msg);
+      setConfirmDelete(false);
+    } finally {
+      setDeleting(false);
+    }
+  }
 
   return (
     <AppShell>
@@ -71,8 +101,52 @@ export function IdeaDetailPage() {
           <>
             <div className="flex items-start justify-between gap-4">
               <h1 className="text-2xl font-bold">{idea.title}</h1>
-              <IdeaStatusBadge status={idea.status} />
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <IdeaStatusBadge status={idea.status} />
+                {canEdit && (
+                  <Button asChild size="sm" variant="outline">
+                    <Link to={`/ideas/${idea.id}/edit`}>✏️ Edit</Link>
+                  </Button>
+                )}
+                {canDelete && !confirmDelete && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
+                    onClick={() => setConfirmDelete(true)}
+                  >
+                    🗑 Delete
+                  </Button>
+                )}
+                {canDelete && confirmDelete && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-destructive font-medium">
+                      Delete?
+                    </span>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      disabled={deleting}
+                      onClick={handleDelete}
+                    >
+                      {deleting ? "Deleting…" : "Yes, delete"}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      disabled={deleting}
+                      onClick={() => setConfirmDelete(false)}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                )}
+              </div>
             </div>
+
+            {deleteError && (
+              <p className="text-sm text-destructive">{deleteError}</p>
+            )}
 
             <div className="flex gap-4 text-sm text-muted-foreground">
               <span>

@@ -154,6 +154,7 @@ export function MyIdeasPage() {
                   <TableHead>Category</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Date</TableHead>
+                  <TableHead />
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -173,6 +174,14 @@ export function MyIdeasPage() {
                     </TableCell>
                     <TableCell className="text-muted-foreground text-sm">
                       {new Date(idea.createdAt).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {(idea.status === "Draft" ||
+                        idea.status === "Submitted") && (
+                        <Button asChild size="sm" variant="outline">
+                          <Link to={`/ideas/${idea.id}/edit`}>Edit</Link>
+                        </Button>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}

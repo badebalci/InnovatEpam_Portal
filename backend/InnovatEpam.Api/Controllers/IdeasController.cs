@@ -59,6 +59,36 @@ public class IdeasController(IdeaService ideaService, EvaluationService evaluati
         return StatusCode(201, response);
     }
 
+    [HttpPatch("{id:int}")]
+    [Authorize(Roles = "Submitter")]
+    public async Task<IActionResult> UpdateDraft(int id, [FromForm] UpdateIdeaRequest request)
+    {
+        if (!ModelState.IsValid)
+            return ValidationProblem(ModelState);
+
+        var userId = GetUserId();
+        var (response, error, forbidden) = await ideaService.UpdateDraftAsync(id, request, userId);
+
+        if (forbidden) return StatusCode(403, new { error = "Access denied." });
+        if (response is null) return NotFound(new { error });
+
+        return Ok(response);
+    }
+
+    [HttpDelete("{id:int}")]
+    [Authorize(Roles = "Submitter")]
+    public async Task<IActionResult> DeleteIdea(int id)
+    {
+        var userId = GetUserId();
+        var (error, forbidden) = await ideaService.DeleteAsync(id, userId);
+
+        if (forbidden) return StatusCode(403, new { error = "Access denied." });
+        if (error == "Idea not found.") return NotFound(new { error });
+        if (error is not null) return Conflict(new { error });
+
+        return NoContent();
+    }
+
     [HttpPatch("{id:int}/review")]
     [Authorize(Roles = "AdminEvaluator")]
     public async Task<IActionResult> StartReview(int id)

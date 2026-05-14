@@ -24,6 +24,7 @@ export const IDEA_CATEGORIES = [
 ] as const
 
 export const IDEA_STATUSES = [
+  'Draft',
   'Submitted',
   'UnderReview',
   'Accepted',

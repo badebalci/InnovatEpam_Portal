@@ -19,7 +19,16 @@ public static class Seeder
             CreatedAt = DateTime.UtcNow
         };
 
-        context.Users.Add(admin);
+        var submitter = new User
+        {
+            Email = "test@epam.com",
+            FullName = "Test Submitter",
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword("Testtest123"),
+            Role = Role.Submitter,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        context.Users.AddRange(admin, submitter);
         context.SaveChanges();
     }
 }

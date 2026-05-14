@@ -81,9 +81,8 @@ export function EvaluationDialog({
   const isFinalReview = idea?.status === "FinalReview";
 
   const overallPreview =
-    Math.round(
-      (Object.values(scores).reduce((a, b) => a + b, 0) / 5) * 10,
-    ) / 10;
+    Math.round((Object.values(scores).reduce((a, b) => a + b, 0) / 5) * 10) /
+    10;
 
   function handleClose() {
     setDecision("Accepted");

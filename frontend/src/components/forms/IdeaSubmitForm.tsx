@@ -630,9 +630,7 @@ export function IdeaSubmitForm() {
             onClick={() => setIsBlindReview((v) => !v)}
             className={[
               "relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-ring",
-              isBlindReview
-                ? "bg-primary"
-                : "bg-muted-foreground/30",
+              isBlindReview ? "bg-primary" : "bg-muted-foreground/30",
             ].join(" ")}
           >
             <span
@@ -645,7 +643,8 @@ export function IdeaSubmitForm() {
           <span className="text-sm font-medium">Enable blind review</span>
         </label>
         <p className="text-xs text-muted-foreground pl-12">
-          Reviewers won't see who submitted this idea until a final decision is made.
+          Reviewers won't see who submitted this idea until a final decision is
+          made.
         </p>
       </div>
 

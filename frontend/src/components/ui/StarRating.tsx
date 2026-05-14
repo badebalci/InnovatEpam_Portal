@@ -1,5 +1,5 @@
 interface StarRatingProps {
-  value: number;        // 1–5
+  value: number; // 1–5
   onChange?: (v: number) => void; // omit for read-only
   disabled?: boolean;
   size?: "sm" | "md";

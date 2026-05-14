@@ -14,7 +14,6 @@ public class EvaluationService(AppDbContext db)
             [IdeaStatus.Submitted] = IdeaStatus.InitialReview,
             [IdeaStatus.InitialReview] = IdeaStatus.TechnicalReview,
             [IdeaStatus.TechnicalReview] = IdeaStatus.FinalReview,
-            [IdeaStatus.FinalReview] = IdeaStatus.Accepted,
         };
 
     public async Task<(IdeaResponse? Response, string? Error, string? CurrentStatus)> StartReviewAsync(int ideaId)
@@ -111,15 +110,34 @@ public class EvaluationService(AppDbContext db)
         var idea = await LoadIdeaAsync(ideaId);
         if (idea is null) return (null, "Idea not found.", null);
 
-        if (idea.Status != IdeaStatus.UnderReview)
-            return (null, "Cannot evaluate. Idea must be in 'UnderReview' status before accepting or rejecting.", idea.Status.ToString());
+        var evaluatableStatuses = new[] { IdeaStatus.UnderReview, IdeaStatus.FinalReview };
+        if (!evaluatableStatuses.Contains(idea.Status))
+            return (null, "Cannot evaluate. Idea must be in 'FinalReview' status before accepting or rejecting.", idea.Status.ToString());
 
+        if (idea.Status == IdeaStatus.FinalReview)
+        {
+            var scoreValues = new[] { request.ScoreFunctionality, request.ScoreReliability,
+                request.ScoreUsability, request.ScoreMaintainability, request.ScoreEfficiency };
+            if (scoreValues.Any(s => s < 1 || s > 5))
+                return (null, "All dimension scores must be between 1 and 5.", idea.Status.ToString());
+        }
+
+        var isFinalReview = idea.Status == IdeaStatus.FinalReview;
         var evaluation = new Evaluation
         {
             IdeaId = ideaId,
             EvaluatorId = evaluatorId,
             Decision = request.Decision,
             Comment = request.Comment.Trim(),
+            ScoreFunctionality = isFinalReview ? request.ScoreFunctionality : 0,
+            ScoreReliability = isFinalReview ? request.ScoreReliability : 0,
+            ScoreUsability = isFinalReview ? request.ScoreUsability : 0,
+            ScoreMaintainability = isFinalReview ? request.ScoreMaintainability : 0,
+            ScoreEfficiency = isFinalReview ? request.ScoreEfficiency : 0,
+            OverallScore = isFinalReview ? Math.Round(
+                (request.ScoreFunctionality + request.ScoreReliability +
+                 request.ScoreUsability + request.ScoreMaintainability +
+                 request.ScoreEfficiency) / 5.0, 1) : 0,
             DecidedAt = DateTime.UtcNow
         };
 
@@ -170,7 +188,13 @@ public class EvaluationService(AppDbContext db)
             Decision = idea.Evaluation.Decision.ToString(),
             Comment = idea.Evaluation.Comment,
             EvaluatorName = idea.Evaluation.Evaluator.FullName,
-            DecidedAt = idea.Evaluation.DecidedAt
+            DecidedAt = idea.Evaluation.DecidedAt,
+            ScoreFunctionality = idea.Evaluation.ScoreFunctionality,
+            ScoreReliability = idea.Evaluation.ScoreReliability,
+            ScoreUsability = idea.Evaluation.ScoreUsability,
+            ScoreMaintainability = idea.Evaluation.ScoreMaintainability,
+            ScoreEfficiency = idea.Evaluation.ScoreEfficiency,
+            OverallScore = idea.Evaluation.OverallScore
         },
         StageHistory = idea.StageTransitions
             .OrderBy(st => st.TransitionedAt)

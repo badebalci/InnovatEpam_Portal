@@ -74,6 +74,7 @@ public class IdeaService(AppDbContext db, FileStorageService fileStorage)
 
         var query = db.Ideas
             .Include(i => i.Submitter)
+            .Include(i => i.Evaluation)
             .AsQueryable();
 
         if (role == "Submitter")
@@ -104,6 +105,7 @@ public class IdeaService(AppDbContext db, FileStorageService fileStorage)
                 Status = i.Status.ToString(),
                 IsBlindReview = i.IsBlindReview,
                 SubmitterName = i.Submitter.FullName,
+                OverallScore = i.Evaluation != null ? (double?)i.Evaluation.OverallScore : null,
                 CreatedAt = i.CreatedAt
             })
             .ToListAsync();
@@ -178,7 +180,13 @@ public class IdeaService(AppDbContext db, FileStorageService fileStorage)
             Decision = idea.Evaluation.Decision.ToString(),
             Comment = idea.Evaluation.Comment,
             EvaluatorName = idea.Evaluation.Evaluator.FullName,
-            DecidedAt = idea.Evaluation.DecidedAt
+            DecidedAt = idea.Evaluation.DecidedAt,
+            ScoreFunctionality = idea.Evaluation.ScoreFunctionality,
+            ScoreReliability = idea.Evaluation.ScoreReliability,
+            ScoreUsability = idea.Evaluation.ScoreUsability,
+            ScoreMaintainability = idea.Evaluation.ScoreMaintainability,
+            ScoreEfficiency = idea.Evaluation.ScoreEfficiency,
+            OverallScore = idea.Evaluation.OverallScore
         },
         StageHistory = idea.StageTransitions
             .OrderBy(st => st.TransitionedAt)

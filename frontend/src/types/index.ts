@@ -28,6 +28,7 @@ export interface IdeaSummary {
   status: IdeaStatus
   submitterName: string
   isBlindReview: boolean
+  overallScore: number | null
   createdAt: string
 }
 
@@ -41,6 +42,12 @@ export interface EvaluationInfo {
   comment: string
   evaluatorName: string
   decidedAt: string
+  scoreFunctionality: number
+  scoreReliability: number
+  scoreUsability: number
+  scoreMaintainability: number
+  scoreEfficiency: number
+  overallScore: number
 }
 
 export interface StageTransitionInfo {
@@ -94,6 +101,11 @@ export interface LoginPayload {
 export interface EvaluatePayload {
   decision: EvaluationDecision
   comment: string
+  scoreFunctionality?: number
+  scoreReliability?: number
+  scoreUsability?: number
+  scoreMaintainability?: number
+  scoreEfficiency?: number
 }
 
 export interface AppSettings {

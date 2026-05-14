@@ -10,4 +10,10 @@ public class EvaluateRequest
 
     [Required, MinLength(1), MaxLength(2000)]
     public string Comment { get; set; } = string.Empty;
+
+    public int ScoreFunctionality { get; set; }
+    public int ScoreReliability { get; set; }
+    public int ScoreUsability { get; set; }
+    public int ScoreMaintainability { get; set; }
+    public int ScoreEfficiency { get; set; }
 }

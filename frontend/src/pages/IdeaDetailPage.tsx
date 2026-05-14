@@ -6,6 +6,8 @@ import { useAuth } from "../hooks/useAuth";
 import { AppShell } from "../components/layout/AppShell";
 import { IdeaStatusBadge } from "../components/ideas/IdeaStatusBadge";
 import { ReviewStepper } from "../components/ideas/ReviewStepper";
+import { EvaluationDialog } from "../components/ideas/EvaluationDialog";
+import { StarRating } from "../components/ui/StarRating";
 import { Button } from "../components/ui/button";
 import { Skeleton } from "../components/ui/skeleton";
 
@@ -49,6 +51,9 @@ export function IdeaDetailPage() {
   const [blindToggleLoading, setBlindToggleLoading] = useState(false);
   const [blindToggleError, setBlindToggleError] = useState<string | null>(null);
 
+  // Final-stage evaluate dialog state (admin only)
+  const [evalDialogOpen, setEvalDialogOpen] = useState(false);
+
   useEffect(() => {
     if (!id) return;
     setLoading(true);
@@ -72,9 +77,7 @@ export function IdeaDetailPage() {
 
   const isAdminEvaluator = user?.role === "AdminEvaluator";
   const advanceable = idea
-    ? ["Submitted", "InitialReview", "TechnicalReview", "FinalReview"].includes(
-        idea.status,
-      )
+    ? ["Submitted", "InitialReview", "TechnicalReview"].includes(idea.status)
     : false;
   const rejectable = idea
     ? [
@@ -166,7 +169,8 @@ export function IdeaDetailPage() {
   }
 
   return (
-    <AppShell>
+    <>
+      <AppShell>
       <div className="max-w-2xl space-y-6">
         <button
           onClick={() => navigate(-1)}
@@ -335,6 +339,15 @@ export function IdeaDetailPage() {
                         : `Advance to ${nextStageName[idea.status] ?? "Next Stage"}`}
                     </Button>
                   )}
+                  {idea.status === "FinalReview" && !showRejectForm && (
+                    <Button
+                      size="sm"
+                      disabled={stageActionLoading}
+                      onClick={() => setEvalDialogOpen(true)}
+                    >
+                      Evaluate &amp; Decide
+                    </Button>
+                  )}
                   {rejectable && !showRejectForm && (
                     <Button
                       size="sm"
@@ -449,14 +462,74 @@ export function IdeaDetailPage() {
 
             {idea.evaluation &&
               (idea.status === "Accepted" || idea.status === "Rejected") && (
-                <div className="rounded-lg border bg-card p-4 space-y-2">
-                  <h2 className="font-semibold text-base">
-                    Evaluator Feedback
-                  </h2>
+                <div className="rounded-lg border bg-card p-4 space-y-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <h2 className="font-semibold text-base">
+                      Evaluator Feedback
+                    </h2>
+                    {idea.evaluation.overallScore > 0 && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 dark:bg-amber-900/30 px-3 py-1 text-sm font-bold text-amber-700 dark:text-amber-300">
+                        ★ {idea.evaluation.overallScore.toFixed(1)} / 5.0
+                      </span>
+                    )}
+                  </div>
+
                   <p className="text-sm text-muted-foreground">
-                    <strong>{idea.evaluation.evaluatorName}</strong> —{" "}
+                    <strong className="text-foreground">
+                      {idea.evaluation.evaluatorName}
+                    </strong>{" "}
+                    —{" "}
                     {new Date(idea.evaluation.decidedAt).toLocaleDateString()}
                   </p>
+
+                  {idea.evaluation.overallScore > 0 && (
+                    <div className="rounded-md border bg-muted/30 p-3 space-y-2">
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                        Dimension Scores
+                      </p>
+                      {(
+                        [
+                          [
+                            "Functionality",
+                            idea.evaluation.scoreFunctionality,
+                            "Necessary features",
+                          ],
+                          [
+                            "Reliability",
+                            idea.evaluation.scoreReliability,
+                            "Functions without failure",
+                          ],
+                          [
+                            "Usability",
+                            idea.evaluation.scoreUsability,
+                            "Easy to learn & use",
+                          ],
+                          [
+                            "Maintainability",
+                            idea.evaluation.scoreMaintainability,
+                            "Easy to modify/update",
+                          ],
+                          [
+                            "Efficiency",
+                            idea.evaluation.scoreEfficiency,
+                            "Efficient resource use",
+                          ],
+                        ] as [string, number, string][]
+                      ).map(([name, score]) => (
+                        <div
+                          key={name}
+                          className="flex items-center justify-between gap-2"
+                        >
+                          <span className="text-sm w-32 shrink-0">{name}</span>
+                          <StarRating value={score} size="sm" />
+                          <span className="text-xs text-muted-foreground w-6 text-right">
+                            {score}/5
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
                   <p className="text-sm whitespace-pre-wrap">
                     {idea.evaluation.comment}
                   </p>
@@ -466,5 +539,27 @@ export function IdeaDetailPage() {
         )}
       </div>
     </AppShell>
+
+    {idea && (
+      <EvaluationDialog
+        idea={{
+          id: idea.id,
+          title: idea.title,
+          status: idea.status,
+          category: idea.category,
+          submitterName: idea.submitterName,
+          createdAt: idea.createdAt,
+          isBlindReview: idea.isBlindReview,
+          overallScore: idea.evaluation?.overallScore ?? null,
+        }}
+        open={evalDialogOpen}
+        onClose={() => setEvalDialogOpen(false)}
+        onSuccess={() => {
+          setEvalDialogOpen(false);
+          ideasApi.getIdeaById(Number(id)).then(setIdea);
+        }}
+      />
+    )}
+    </>
   );
 }

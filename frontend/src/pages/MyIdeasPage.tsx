@@ -153,6 +153,7 @@ export function MyIdeasPage() {
                   <TableHead>Title</TableHead>
                   <TableHead>Category</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Score</TableHead>
                   <TableHead>Date</TableHead>
                   <TableHead />
                 </TableRow>
@@ -171,6 +172,15 @@ export function MyIdeasPage() {
                     <TableCell>{idea.category}</TableCell>
                     <TableCell>
                       <IdeaStatusBadge status={idea.status} />
+                    </TableCell>
+                    <TableCell>
+                      {idea.overallScore != null ? (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 dark:bg-amber-900/30 px-2 py-0.5 text-xs font-bold text-amber-700 dark:text-amber-300">
+                          ★ {idea.overallScore.toFixed(1)}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
                     </TableCell>
                     <TableCell className="text-muted-foreground text-sm">
                       {new Date(idea.createdAt).toLocaleDateString()}

@@ -172,6 +172,7 @@ export function AdminDashboard() {
                   <TableHead>Submitter</TableHead>
                   <TableHead>Category</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Score</TableHead>
                   <TableHead>Date</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
@@ -194,6 +195,15 @@ export function AdminDashboard() {
                     <TableCell>
                       <IdeaStatusBadge status={idea.status} />
                     </TableCell>
+                    <TableCell>
+                      {idea.overallScore != null ? (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 dark:bg-amber-900/30 px-2 py-0.5 text-xs font-bold text-amber-700 dark:text-amber-300">
+                          ★ {idea.overallScore.toFixed(1)}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
+                    </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
                       {new Date(idea.createdAt).toLocaleDateString()}
                     </TableCell>
@@ -210,6 +220,11 @@ export function AdminDashboard() {
                       {idea.status === "UnderReview" && (
                         <Button size="sm" onClick={() => setEvalIdea(idea)}>
                           Evaluate
+                        </Button>
+                      )}
+                      {idea.status === "FinalReview" && (
+                        <Button size="sm" onClick={() => setEvalIdea(idea)}>
+                          Evaluate &amp; Decide
                         </Button>
                       )}
                     </TableCell>

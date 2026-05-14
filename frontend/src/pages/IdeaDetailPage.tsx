@@ -5,6 +5,7 @@ import type { IdeaDetail } from "../types";
 import { useAuth } from "../hooks/useAuth";
 import { AppShell } from "../components/layout/AppShell";
 import { IdeaStatusBadge } from "../components/ideas/IdeaStatusBadge";
+import { ReviewStepper } from "../components/ideas/ReviewStepper";
 import { Button } from "../components/ui/button";
 import { Skeleton } from "../components/ui/skeleton";
 
@@ -38,6 +39,12 @@ export function IdeaDetailPage() {
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
+  // Stage action state
+  const [stageComment, setStageComment] = useState("");
+  const [showRejectForm, setShowRejectForm] = useState(false);
+  const [stageActionLoading, setStageActionLoading] = useState(false);
+  const [stageActionError, setStageActionError] = useState<string | null>(null);
+
   useEffect(() => {
     if (!id) return;
     setLoading(true);
@@ -58,6 +65,66 @@ export function IdeaDetailPage() {
     isOwner && (idea.status === "Draft" || idea.status === "Submitted");
   const canDelete =
     isOwner && (idea.status === "Draft" || idea.status === "Submitted");
+
+  const isAdminEvaluator = user?.role === "AdminEvaluator";
+  const advanceable = idea
+    ? ["Submitted", "InitialReview", "TechnicalReview", "FinalReview"].includes(
+        idea.status,
+      )
+    : false;
+  const rejectable = idea
+    ? [
+        "Submitted",
+        "InitialReview",
+        "TechnicalReview",
+        "FinalReview",
+        "UnderReview",
+      ].includes(idea.status)
+    : false;
+
+  const nextStageName: Record<string, string> = {
+    Submitted: "Initial Review",
+    InitialReview: "Technical Review",
+    TechnicalReview: "Final Review",
+    FinalReview: "Accept",
+  };
+
+  async function handleAdvance() {
+    if (!idea) return;
+    setStageActionLoading(true);
+    setStageActionError(null);
+    try {
+      const updated = await ideasApi.advanceStage(idea.id, stageComment);
+      setIdea(updated);
+      setStageComment("");
+    } catch (err: unknown) {
+      const msg =
+        (err as { response?: { data?: { error?: string } } })?.response?.data
+          ?.error ?? "Failed to advance stage.";
+      setStageActionError(msg);
+    } finally {
+      setStageActionLoading(false);
+    }
+  }
+
+  async function handleReject() {
+    if (!idea) return;
+    setStageActionLoading(true);
+    setStageActionError(null);
+    try {
+      const updated = await ideasApi.rejectIdea(idea.id, stageComment);
+      setIdea(updated);
+      setStageComment("");
+      setShowRejectForm(false);
+    } catch (err: unknown) {
+      const msg =
+        (err as { response?: { data?: { error?: string } } })?.response?.data
+          ?.error ?? "Failed to reject idea.";
+      setStageActionError(msg);
+    } finally {
+      setStageActionLoading(false);
+    }
+  }
 
   async function handleDelete() {
     if (!idea) return;
@@ -162,6 +229,74 @@ export function IdeaDetailPage() {
               <span>{new Date(idea.createdAt).toLocaleDateString()}</span>
             </div>
 
+            {/* Review progress stepper — visible to all roles */}
+            {idea.status !== "Draft" && <ReviewStepper status={idea.status} />}
+
+            {/* Admin stage action panel */}
+            {isAdminEvaluator && (advanceable || rejectable) && (
+              <div className="rounded-lg border bg-card p-4 space-y-3">
+                <h2 className="font-semibold text-base">Review Actions</h2>
+
+                <textarea
+                  className="w-full rounded-md border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-none"
+                  rows={3}
+                  placeholder="Comment (optional)…"
+                  value={stageComment}
+                  onChange={(e) => setStageComment(e.target.value)}
+                  disabled={stageActionLoading}
+                />
+
+                {stageActionError && (
+                  <p className="text-sm text-destructive">{stageActionError}</p>
+                )}
+
+                <div className="flex gap-2">
+                  {advanceable && !showRejectForm && (
+                    <Button
+                      size="sm"
+                      disabled={stageActionLoading}
+                      onClick={handleAdvance}
+                    >
+                      {stageActionLoading
+                        ? "Advancing…"
+                        : `Advance to ${nextStageName[idea.status] ?? "Next Stage"}`}
+                    </Button>
+                  )}
+                  {rejectable && !showRejectForm && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
+                      disabled={stageActionLoading}
+                      onClick={() => setShowRejectForm(true)}
+                    >
+                      Reject
+                    </Button>
+                  )}
+                  {showRejectForm && (
+                    <>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        disabled={stageActionLoading}
+                        onClick={handleReject}
+                      >
+                        {stageActionLoading ? "Rejecting…" : "Confirm Reject"}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        disabled={stageActionLoading}
+                        onClick={() => setShowRejectForm(false)}
+                      >
+                        Cancel
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
+
             <div className="rounded-lg border bg-card p-4">
               <p className="text-sm leading-relaxed">
                 {renderDescription(idea.description)}
@@ -191,6 +326,51 @@ export function IdeaDetailPage() {
                     </li>
                   ))}
                 </ul>
+              </div>
+            )}
+
+            {/* Stage transition history */}
+            {idea.stageHistory && idea.stageHistory.length > 0 && (
+              <div className="rounded-lg border bg-card p-4 space-y-3">
+                <h2 className="font-semibold text-base">Review History</h2>
+                <ol className="space-y-3">
+                  {idea.stageHistory.map((entry) => (
+                    <li
+                      key={entry.id}
+                      className="flex gap-3 text-sm border-l-2 border-muted pl-3"
+                    >
+                      <div className="flex-1 space-y-0.5">
+                        <p className="font-medium">
+                          <span className="text-muted-foreground">
+                            {entry.fromStatus}
+                          </span>
+                          {" → "}
+                          <span
+                            className={
+                              entry.toStatus === "Rejected"
+                                ? "text-destructive"
+                                : entry.toStatus === "Accepted"
+                                  ? "text-green-600 dark:text-green-400"
+                                  : "text-primary"
+                            }
+                          >
+                            {entry.toStatus}
+                          </span>
+                        </p>
+                        <p className="text-muted-foreground text-xs">
+                          by{" "}
+                          <strong className="text-foreground">
+                            {entry.evaluatorName}
+                          </strong>{" "}
+                          · {new Date(entry.transitionedAt).toLocaleString()}
+                        </p>
+                        {entry.comment && (
+                          <p className="text-foreground">{entry.comment}</p>
+                        )}
+                      </div>
+                    </li>
+                  ))}
+                </ol>
               </div>
             )}
 

@@ -22,4 +22,5 @@ public class User
     public ICollection<Idea> Ideas { get; set; } = [];
     public ICollection<Evaluation> Evaluations { get; set; } = [];
     public ICollection<RefreshToken> RefreshTokens { get; set; } = [];
+    public ICollection<StageTransition> StageTransitions { get; set; } = [];
 }

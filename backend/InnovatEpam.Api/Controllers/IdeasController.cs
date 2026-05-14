@@ -89,6 +89,40 @@ public class IdeasController(IdeaService ideaService, EvaluationService evaluati
         return NoContent();
     }
 
+    [HttpPatch("{id:int}/advance")]
+    [Authorize(Roles = "AdminEvaluator")]
+    public async Task<IActionResult> AdvanceStage(int id, [FromBody] StageTransitionRequest request)
+    {
+        var evaluatorId = GetUserId();
+        var (response, error, currentStatus) = await evaluationService.AdvanceStageAsync(id, evaluatorId, request.Comment);
+
+        if (response is null)
+        {
+            if (error == "Idea not found.")
+                return NotFound(new { error });
+            return Conflict(new { error, currentStatus });
+        }
+
+        return Ok(response);
+    }
+
+    [HttpPatch("{id:int}/reject")]
+    [Authorize(Roles = "AdminEvaluator")]
+    public async Task<IActionResult> RejectAtStage(int id, [FromBody] StageTransitionRequest request)
+    {
+        var evaluatorId = GetUserId();
+        var (response, error, currentStatus) = await evaluationService.RejectAtStageAsync(id, evaluatorId, request.Comment);
+
+        if (response is null)
+        {
+            if (error == "Idea not found.")
+                return NotFound(new { error });
+            return Conflict(new { error, currentStatus });
+        }
+
+        return Ok(response);
+    }
+
     [HttpPatch("{id:int}/review")]
     [Authorize(Roles = "AdminEvaluator")]
     public async Task<IActionResult> StartReview(int id)

@@ -122,6 +122,8 @@ public class IdeaService(AppDbContext db, FileStorageService fileStorage)
             .Include(i => i.Attachments)
             .Include(i => i.Evaluation)
                 .ThenInclude(e => e!.Evaluator)
+            .Include(i => i.StageTransitions.OrderBy(st => st.TransitionedAt))
+                .ThenInclude(st => st.Evaluator)
             .FirstOrDefaultAsync(i => i.Id == id);
 
         if (idea is null) return (null, false);
@@ -158,7 +160,18 @@ public class IdeaService(AppDbContext db, FileStorageService fileStorage)
             Comment = idea.Evaluation.Comment,
             EvaluatorName = idea.Evaluation.Evaluator.FullName,
             DecidedAt = idea.Evaluation.DecidedAt
-        }
+        },
+        StageHistory = idea.StageTransitions
+            .OrderBy(st => st.TransitionedAt)
+            .Select(st => new StageTransitionDto
+            {
+                Id = st.Id,
+                FromStatus = st.FromStatus.ToString(),
+                ToStatus = st.ToStatus.ToString(),
+                EvaluatorName = st.Evaluator.FullName,
+                Comment = st.Comment,
+                TransitionedAt = st.TransitionedAt
+            }).ToList()
     };
 
     public async Task<(IdeaResponse? Response, string? Error, bool Forbidden)> UpdateDraftAsync(

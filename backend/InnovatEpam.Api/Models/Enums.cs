@@ -19,9 +19,13 @@ public enum IdeaStatus
 {
     Draft,
     Submitted,
-    UnderReview,
+    InitialReview,
+    TechnicalReview,
+    FinalReview,
     Accepted,
-    Rejected
+    Rejected,
+    // Legacy — kept for backward compatibility with existing data
+    UnderReview
 }
 
 public enum EvaluationDecision

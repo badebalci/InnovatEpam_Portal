@@ -14,9 +14,12 @@ const statusConfig: Record<
 > = {
   Draft: { label: "Draft", variant: "secondary" },
   Submitted: { label: "Submitted", variant: "info" },
-  UnderReview: { label: "Under Review", variant: "warning" },
+  InitialReview: { label: "Initial Review", variant: "warning" },
+  TechnicalReview: { label: "Technical Review", variant: "warning" },
+  FinalReview: { label: "Final Review", variant: "warning" },
   Accepted: { label: "Accepted", variant: "success" },
   Rejected: { label: "Rejected", variant: "destructive" },
+  UnderReview: { label: "Under Review", variant: "warning" },
 };
 
 export function IdeaStatusBadge({ status }: IdeaStatusBadgeProps) {

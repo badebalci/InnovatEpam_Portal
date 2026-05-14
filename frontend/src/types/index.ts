@@ -1,6 +1,14 @@
 export type Role = 'Submitter' | 'AdminEvaluator'
 
-export type IdeaStatus = 'Draft' | 'Submitted' | 'UnderReview' | 'Accepted' | 'Rejected'
+export type IdeaStatus =
+  | 'Draft'
+  | 'Submitted'
+  | 'InitialReview'
+  | 'TechnicalReview'
+  | 'FinalReview'
+  | 'Accepted'
+  | 'Rejected'
+  | 'UnderReview' // legacy
 
 export type IdeaCategory = 'Technology' | 'Process' | 'Product' | 'People' | 'Other'
 
@@ -34,6 +42,15 @@ export interface EvaluationInfo {
   decidedAt: string
 }
 
+export interface StageTransitionInfo {
+  id: number
+  fromStatus: IdeaStatus
+  toStatus: IdeaStatus
+  evaluatorName: string
+  comment: string
+  transitionedAt: string
+}
+
 export interface IdeaDetail {
   id: number
   title: string
@@ -46,6 +63,7 @@ export interface IdeaDetail {
   updatedAt: string
   attachments: AttachmentInfo[]
   evaluation: EvaluationInfo | null
+  stageHistory: StageTransitionInfo[]
 }
 
 export interface PagedResult<T> {

@@ -13,6 +13,7 @@ public class IdeaResponse
     public DateTime UpdatedAt { get; set; }
     public List<AttachmentDto> Attachments { get; set; } = [];
     public EvaluationDto? Evaluation { get; set; }
+    public List<StageTransitionDto> StageHistory { get; set; } = [];
 }
 
 public class IdeaSummaryResponse
@@ -45,4 +46,14 @@ public class EvaluationDto
     public string Comment { get; set; } = string.Empty;
     public string EvaluatorName { get; set; } = string.Empty;
     public DateTime DecidedAt { get; set; }
+}
+
+public class StageTransitionDto
+{
+    public int Id { get; set; }
+    public string FromStatus { get; set; } = string.Empty;
+    public string ToStatus { get; set; } = string.Empty;
+    public string EvaluatorName { get; set; } = string.Empty;
+    public string Comment { get; set; } = string.Empty;
+    public DateTime TransitionedAt { get; set; }
 }

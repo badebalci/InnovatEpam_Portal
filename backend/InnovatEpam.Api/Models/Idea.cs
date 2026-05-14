@@ -24,4 +24,5 @@ public class Idea
 
     public ICollection<Attachment> Attachments { get; set; } = new List<Attachment>();
     public Evaluation? Evaluation { get; set; }
+    public ICollection<StageTransition> StageTransitions { get; set; } = new List<StageTransition>();
 }

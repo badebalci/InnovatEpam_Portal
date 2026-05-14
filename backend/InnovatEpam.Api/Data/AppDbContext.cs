@@ -10,6 +10,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Attachment> Attachments => Set<Attachment>();
     public DbSet<Evaluation> Evaluations => Set<Evaluation>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+    public DbSet<StageTransition> StageTransitions => Set<StageTransition>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -89,5 +90,29 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             .WithMany(u => u.RefreshTokens)
             .HasForeignKey(rt => rt.UserId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        // StageTransition
+        modelBuilder.Entity<StageTransition>()
+            .HasIndex(st => st.IdeaId);
+
+        modelBuilder.Entity<StageTransition>()
+            .Property(st => st.FromStatus)
+            .HasConversion<string>();
+
+        modelBuilder.Entity<StageTransition>()
+            .Property(st => st.ToStatus)
+            .HasConversion<string>();
+
+        modelBuilder.Entity<StageTransition>()
+            .HasOne(st => st.Idea)
+            .WithMany(i => i.StageTransitions)
+            .HasForeignKey(st => st.IdeaId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<StageTransition>()
+            .HasOne(st => st.Evaluator)
+            .WithMany(u => u.StageTransitions)
+            .HasForeignKey(st => st.EvaluatorId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

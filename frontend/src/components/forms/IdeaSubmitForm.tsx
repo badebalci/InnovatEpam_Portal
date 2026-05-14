@@ -282,7 +282,7 @@ export function IdeaSubmitForm() {
     formData.append("title", title.trim());
     formData.append("description", fullDescription);
     formData.append("category", category);
-    formData.append("saveDraft", "true");
+    formData.append("saveAsDraft", "true");
     for (const f of files) formData.append("files", f);
 
     try {

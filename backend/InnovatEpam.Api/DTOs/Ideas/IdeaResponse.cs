@@ -1,0 +1,46 @@
+namespace InnovatEpam.Api.DTOs.Ideas;
+
+public class IdeaResponse
+{
+    public int Id { get; set; }
+    public string Title { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public string Category { get; set; } = string.Empty;
+    public string Status { get; set; } = string.Empty;
+    public string SubmitterName { get; set; } = string.Empty;
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
+    public AttachmentDto? Attachment { get; set; }
+    public EvaluationDto? Evaluation { get; set; }
+}
+
+public class IdeaSummaryResponse
+{
+    public int Id { get; set; }
+    public string Title { get; set; } = string.Empty;
+    public string Category { get; set; } = string.Empty;
+    public string Status { get; set; } = string.Empty;
+    public string SubmitterName { get; set; } = string.Empty;
+    public DateTime CreatedAt { get; set; }
+}
+
+public class IdeaListResponse
+{
+    public IEnumerable<IdeaSummaryResponse> Items { get; set; } = [];
+    public int TotalCount { get; set; }
+    public int Page { get; set; }
+    public int PageSize { get; set; }
+}
+
+public class AttachmentDto
+{
+    public string FileName { get; set; } = string.Empty;
+}
+
+public class EvaluationDto
+{
+    public string Decision { get; set; } = string.Empty;
+    public string Comment { get; set; } = string.Empty;
+    public string EvaluatorName { get; set; } = string.Empty;
+    public DateTime DecidedAt { get; set; }
+}

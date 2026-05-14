@@ -1,0 +1,6 @@
+@InnovatEpam.Api_HostAddress = http://localhost:5101
+
+GET {{InnovatEpam.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

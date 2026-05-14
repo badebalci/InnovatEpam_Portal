@@ -12,16 +12,22 @@ public class IdeaService(AppDbContext db, FileStorageService fileStorage)
         CreateIdeaRequest request, int submitterId)
     {
         var errors = new Dictionary<string, string[]>();
+        var files = request.Files ?? [];
 
-        if (request.File is not null)
+        if (files.Count > AppConstants.MaxAttachmentsPerIdea)
         {
-            var (valid, error) = fileStorage.ValidateFile(request.File);
-            if (!valid)
-            {
-                errors["file"] = [error!];
-                return (null, errors);
-            }
+            errors["files"] = [$"You can attach at most {AppConstants.MaxAttachmentsPerIdea} files."];
+            return (null, errors);
         }
+
+        foreach (var file in files)
+        {
+            var (valid, error) = fileStorage.ValidateFile(file);
+            if (!valid)
+                errors[$"file_{file.FileName}"] = [error!];
+        }
+
+        if (errors.Count > 0) return (null, errors);
 
         var idea = new Idea
         {
@@ -35,20 +41,23 @@ public class IdeaService(AppDbContext db, FileStorageService fileStorage)
         db.Ideas.Add(idea);
         await db.SaveChangesAsync();
 
-        if (request.File is not null)
+        foreach (var file in files)
         {
-            var storagePath = await fileStorage.SaveAsync(request.File, idea.Id);
-            var attachment = new Attachment
+            var storagePath = await fileStorage.SaveAsync(file, idea.Id);
+            db.Attachments.Add(new Attachment
             {
                 IdeaId = idea.Id,
-                OriginalFileName = Path.GetFileName(request.File.FileName),
+                OriginalFileName = Path.GetFileName(file.FileName),
                 StoragePath = storagePath,
-                ContentType = request.File.ContentType,
-                FileSizeBytes = request.File.Length
-            };
-            db.Attachments.Add(attachment);
+                ContentType = file.ContentType,
+                FileSizeBytes = file.Length
+            });
+        }
+
+        if (files.Count > 0)
+        {
             await db.SaveChangesAsync();
-            idea.Attachment = attachment;
+            idea.Attachments = await db.Attachments.Where(a => a.IdeaId == idea.Id).ToListAsync();
         }
 
         var submitter = await db.Users.FindAsync(submitterId);
@@ -108,7 +117,7 @@ public class IdeaService(AppDbContext db, FileStorageService fileStorage)
     {
         var idea = await db.Ideas
             .Include(i => i.Submitter)
-            .Include(i => i.Attachment)
+            .Include(i => i.Attachments)
             .Include(i => i.Evaluation)
                 .ThenInclude(e => e!.Evaluator)
             .FirstOrDefaultAsync(i => i.Id == id);
@@ -131,10 +140,11 @@ public class IdeaService(AppDbContext db, FileStorageService fileStorage)
         SubmitterName = submitter.FullName,
         CreatedAt = idea.CreatedAt,
         UpdatedAt = idea.UpdatedAt,
-        Attachment = idea.Attachment is null ? null : new AttachmentDto
+        Attachments = idea.Attachments.Select(a => new AttachmentDto
         {
-            FileName = idea.Attachment.OriginalFileName
-        },
+            Id = a.Id,
+            FileName = a.OriginalFileName
+        }).ToList(),
         Evaluation = idea.Evaluation is null ? null : new EvaluationDto
         {
             Decision = idea.Evaluation.Decision.ToString(),
@@ -145,16 +155,18 @@ public class IdeaService(AppDbContext db, FileStorageService fileStorage)
     };
 
     public async Task<(string? StoragePath, string? FileName, string? ContentType, bool Forbidden)> GetAttachmentAsync(
-        int ideaId, int userId, string role)
+        int ideaId, int attachmentId, int userId, string role)
     {
         var idea = await db.Ideas
-            .Include(i => i.Attachment)
+            .Include(i => i.Attachments)
             .FirstOrDefaultAsync(i => i.Id == ideaId);
 
         if (idea is null) return (null, null, null, false);
         if (role == "Submitter" && idea.SubmitterId != userId) return (null, null, null, true);
-        if (idea.Attachment is null) return (null, null, null, false);
 
-        return (idea.Attachment.StoragePath, idea.Attachment.OriginalFileName, idea.Attachment.ContentType, false);
+        var attachment = idea.Attachments.FirstOrDefault(a => a.Id == attachmentId);
+        if (attachment is null) return (null, null, null, false);
+
+        return (attachment.StoragePath, attachment.OriginalFileName, attachment.ContentType, false);
     }
 }

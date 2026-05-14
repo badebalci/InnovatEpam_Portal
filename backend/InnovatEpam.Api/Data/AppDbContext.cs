@@ -48,15 +48,14 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             .HasForeignKey(i => i.SubmitterId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        // Attachment — unique one per idea
+        // Attachment — many per idea
         modelBuilder.Entity<Attachment>()
-            .HasIndex(a => a.IdeaId)
-            .IsUnique();
+            .HasIndex(a => a.IdeaId);
 
         modelBuilder.Entity<Attachment>()
             .HasOne(a => a.Idea)
-            .WithOne(i => i.Attachment)
-            .HasForeignKey<Attachment>(a => a.IdeaId)
+            .WithMany(i => i.Attachments)
+            .HasForeignKey(a => a.IdeaId)
             .OnDelete(DeleteBehavior.Cascade);
 
         // Evaluation — unique one per idea

@@ -23,6 +23,7 @@ export interface IdeaSummary {
 }
 
 export interface AttachmentInfo {
+  id: number
   fileName: string
 }
 
@@ -43,6 +44,7 @@ export interface IdeaDetail {
   createdAt: string
   updatedAt: string
   attachment: AttachmentInfo | null
+  attachments: AttachmentInfo[]
   evaluation: EvaluationInfo | null
 }
 

@@ -95,13 +95,13 @@ public class IdeasController(IdeaService ideaService, EvaluationService evaluati
         return Ok(response);
     }
 
-    [HttpGet("{id:int}/attachment")]
-    public async Task<IActionResult> DownloadAttachment(int id)
+    [HttpGet("{id:int}/attachments/{attachmentId:int}")]
+    public async Task<IActionResult> DownloadAttachment(int id, int attachmentId)
     {
         var userId = GetUserId();
         var role = GetRole();
 
-        var (storagePath, fileName, contentType, forbidden) = await ideaService.GetAttachmentAsync(id, userId, role);
+        var (storagePath, fileName, contentType, forbidden) = await ideaService.GetAttachmentAsync(id, attachmentId, userId, role);
 
         if (forbidden)
             return StatusCode(403, new { error = "Access denied." });

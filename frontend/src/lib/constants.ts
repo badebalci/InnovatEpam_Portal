@@ -5,7 +5,13 @@ export const ALLOWED_FILE_TYPES = [
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
   'image/png',
   'image/jpeg',
+  'video/mp4',
+  'video/quicktime',
+  'application/zip',
+  'application/x-zip-compressed',
 ]
+
+export const MAX_ATTACHMENTS_PER_IDEA = 5
 
 export const DEFAULT_PAGE_SIZE = 20
 

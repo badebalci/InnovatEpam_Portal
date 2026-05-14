@@ -12,7 +12,7 @@ public class FileStorageService(IConfiguration configuration, ILogger<FileStorag
             return (false, "File exceeds the maximum allowed size of 10 MB.");
 
         if (!AppConstants.AllowedMimeTypes.Contains(file.ContentType, StringComparer.OrdinalIgnoreCase))
-            return (false, "File type not supported. Allowed: PDF, DOCX, PNG, JPG.");
+            return (false, "File type not supported. Allowed: PDF, DOCX, PNG, JPG, MP4, MOV, ZIP.");
 
         return (true, null);
     }
@@ -22,8 +22,9 @@ public class FileStorageService(IConfiguration configuration, ILogger<FileStorag
         var dir = Path.Combine(_uploadRoot, ideaId.ToString());
         Directory.CreateDirectory(dir);
 
-        var safeFileName = Path.GetFileName(file.FileName);
-        var dest = Path.Combine(dir, safeFileName);
+        var ext = Path.GetExtension(file.FileName);
+        var uniqueName = $"{Guid.NewGuid():N}{ext}";
+        var dest = Path.Combine(dir, uniqueName);
 
         await using var stream = File.Create(dest);
         await file.CopyToAsync(stream);

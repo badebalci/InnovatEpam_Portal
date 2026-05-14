@@ -27,8 +27,8 @@ export const ideasApi = {
     return res.data
   },
 
-  async downloadAttachment(id: number, fileName: string) {
-    const res = await api.get(`/ideas/${id}/attachment`, { responseType: 'blob' })
+  async downloadAttachment(ideaId: number, attachmentId: number, fileName: string) {
+    const res = await api.get(`/ideas/${ideaId}/attachments/${attachmentId}`, { responseType: 'blob' })
     const url = URL.createObjectURL(res.data)
     const a = document.createElement('a')
     a.href = url
@@ -38,6 +38,6 @@ export const ideasApi = {
   },
 
   getAttachmentUrl(id: number) {
-    return `/api/ideas/${id}/attachment`
+    return `/api/ideas/${id}/attachments`
   },
 }

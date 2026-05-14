@@ -22,6 +22,6 @@ public class Idea
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
-    public Attachment? Attachment { get; set; }
+    public ICollection<Attachment> Attachments { get; set; } = new List<Attachment>();
     public Evaluation? Evaluation { get; set; }
 }

@@ -49,8 +49,7 @@ namespace InnovatEpam.Api.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("IdeaId")
-                        .IsUnique();
+                    b.HasIndex("IdeaId");
 
                     b.ToTable("Attachments");
                 });
@@ -204,8 +203,8 @@ namespace InnovatEpam.Api.Migrations
             modelBuilder.Entity("InnovatEpam.Api.Models.Attachment", b =>
                 {
                     b.HasOne("InnovatEpam.Api.Models.Idea", "Idea")
-                        .WithOne("Attachment")
-                        .HasForeignKey("InnovatEpam.Api.Models.Attachment", "IdeaId")
+                        .WithMany("Attachments")
+                        .HasForeignKey("IdeaId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -255,7 +254,7 @@ namespace InnovatEpam.Api.Migrations
 
             modelBuilder.Entity("InnovatEpam.Api.Models.Idea", b =>
                 {
-                    b.Navigation("Attachment");
+                    b.Navigation("Attachments");
 
                     b.Navigation("Evaluation");
                 });

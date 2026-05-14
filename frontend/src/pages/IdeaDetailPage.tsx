@@ -1,10 +1,29 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, Fragment } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ideasApi } from "../services/ideasApi";
 import type { IdeaDetail } from "../types";
 import { AppShell } from "../components/layout/AppShell";
 import { IdeaStatusBadge } from "../components/ideas/IdeaStatusBadge";
 import { Skeleton } from "../components/ui/skeleton";
+
+/** Renders text that may contain **bold** markers and newlines as JSX. */
+function renderDescription(text: string) {
+  return text.split("\n").map((line, i) => {
+    const parts = line.split(/(\*\*[^*]+\*\*)/g);
+    return (
+      <Fragment key={i}>
+        {i > 0 && <br />}
+        {parts.map((part, j) =>
+          part.startsWith("**") && part.endsWith("**") ? (
+            <strong key={j}>{part.slice(2, -2)}</strong>
+          ) : (
+            part
+          ),
+        )}
+      </Fragment>
+    );
+  });
+}
 
 export function IdeaDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -70,23 +89,34 @@ export function IdeaDetailPage() {
             </div>
 
             <div className="rounded-lg border bg-card p-4">
-              <p className="text-sm whitespace-pre-wrap">{idea.description}</p>
+              <p className="text-sm leading-relaxed">
+                {renderDescription(idea.description)}
+              </p>
             </div>
 
-            {idea.attachment && (
-              <div className="rounded-lg border bg-muted/40 p-4 flex items-center gap-3">
-                <span className="text-sm font-medium">Attachment:</span>
-                <button
-                  onClick={() =>
-                    ideasApi.downloadAttachment(
-                      idea.id,
-                      idea.attachment!.fileName,
-                    )
-                  }
-                  className="text-sm text-primary hover:underline"
-                >
-                  {idea.attachment.fileName}
-                </button>
+            {idea.attachments && idea.attachments.length > 0 && (
+              <div className="rounded-lg border bg-muted/40 p-4 space-y-2">
+                <span className="text-sm font-medium">
+                  Attachments ({idea.attachments.length})
+                </span>
+                <ul className="space-y-1">
+                  {idea.attachments.map((att) => (
+                    <li key={att.id} className="flex items-center gap-2">
+                      <button
+                        onClick={() =>
+                          ideasApi.downloadAttachment(
+                            idea.id,
+                            att.id,
+                            att.fileName,
+                          )
+                        }
+                        className="text-sm text-primary hover:underline truncate"
+                      >
+                        {att.fileName}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
               </div>
             )}
 

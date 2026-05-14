@@ -10,7 +10,7 @@ public class IdeaResponse
     public string SubmitterName { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
-    public AttachmentDto? Attachment { get; set; }
+    public List<AttachmentDto> Attachments { get; set; } = [];
     public EvaluationDto? Evaluation { get; set; }
 }
 
@@ -34,6 +34,7 @@ public class IdeaListResponse
 
 public class AttachmentDto
 {
+    public int Id { get; set; }
     public string FileName { get; set; } = string.Empty;
 }
 

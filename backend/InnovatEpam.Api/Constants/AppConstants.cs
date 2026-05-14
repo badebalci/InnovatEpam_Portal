@@ -9,8 +9,14 @@ public static class AppConstants
         "application/pdf",
         "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         "image/png",
-        "image/jpeg"
+        "image/jpeg",
+        "video/mp4",
+        "video/quicktime",
+        "application/zip",
+        "application/x-zip-compressed"
     ];
+
+    public const int MaxAttachmentsPerIdea = 5;
 
     public const int DefaultPageSize = 20;
     public const int MaxCommentLength = 2000;

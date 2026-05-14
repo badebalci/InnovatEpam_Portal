@@ -12,7 +12,7 @@ public class EvaluationService(AppDbContext db)
     {
         var idea = await db.Ideas
             .Include(i => i.Submitter)
-            .Include(i => i.Attachment)
+            .Include(i => i.Attachments)
             .Include(i => i.Evaluation)
                 .ThenInclude(e => e!.Evaluator)
             .FirstOrDefaultAsync(i => i.Id == ideaId);
@@ -34,7 +34,7 @@ public class EvaluationService(AppDbContext db)
     {
         var idea = await db.Ideas
             .Include(i => i.Submitter)
-            .Include(i => i.Attachment)
+            .Include(i => i.Attachments)
             .FirstOrDefaultAsync(i => i.Id == ideaId);
 
         if (idea is null) return (null, "Idea not found.", null);
@@ -76,10 +76,11 @@ public class EvaluationService(AppDbContext db)
         SubmitterName = idea.Submitter.FullName,
         CreatedAt = idea.CreatedAt,
         UpdatedAt = idea.UpdatedAt,
-        Attachment = idea.Attachment is null ? null : new AttachmentDto
+        Attachments = idea.Attachments?.Select(a => new AttachmentDto
         {
-            FileName = idea.Attachment.OriginalFileName
-        },
+            Id = a.Id,
+            FileName = a.OriginalFileName
+        }).ToList() ?? [],
         Evaluation = idea.Evaluation is null ? null : new EvaluationDto
         {
             Decision = idea.Evaluation.Decision.ToString(),

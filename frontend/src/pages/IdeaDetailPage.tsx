@@ -45,6 +45,10 @@ export function IdeaDetailPage() {
   const [stageActionLoading, setStageActionLoading] = useState(false);
   const [stageActionError, setStageActionError] = useState<string | null>(null);
 
+  // Blind review toggle state (admin only)
+  const [blindToggleLoading, setBlindToggleLoading] = useState(false);
+  const [blindToggleError, setBlindToggleError] = useState<string | null>(null);
+
   useEffect(() => {
     if (!id) return;
     setLoading(true);
@@ -144,6 +148,23 @@ export function IdeaDetailPage() {
     }
   }
 
+  async function handleToggleBlindReview() {
+    if (!idea) return;
+    setBlindToggleLoading(true);
+    setBlindToggleError(null);
+    try {
+      const updated = await ideasApi.setBlindReview(idea.id, !idea.isBlindReview);
+      setIdea(updated);
+    } catch (err: unknown) {
+      const msg =
+        (err as { response?: { data?: { error?: string } } })?.response?.data
+          ?.error ?? "Failed to update blind review setting.";
+      setBlindToggleError(msg);
+    } finally {
+      setBlindToggleLoading(false);
+    }
+  }
+
   return (
     <AppShell>
       <div className="max-w-2xl space-y-6">
@@ -215,16 +236,22 @@ export function IdeaDetailPage() {
               <p className="text-sm text-destructive">{deleteError}</p>
             )}
 
-            <div className="flex gap-4 text-sm text-muted-foreground">
+            <div className="flex flex-wrap gap-4 text-sm text-muted-foreground items-center">
               <span>
                 Category:{" "}
                 <strong className="text-foreground">{idea.category}</strong>
               </span>
-              <span>
+              <span className="flex items-center gap-1.5">
                 By:{" "}
                 <strong className="text-foreground">
                   {idea.submitterName}
                 </strong>
+                {idea.isBlindReview &&
+                  idea.submitterName === "Anonymous Submitter" && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-purple-100 dark:bg-purple-900/30 px-2 py-0.5 text-[10px] font-semibold text-purple-700 dark:text-purple-300">
+                      🔒 Blind
+                    </span>
+                  )}
               </span>
               <span>{new Date(idea.createdAt).toLocaleDateString()}</span>
             </div>
@@ -232,10 +259,56 @@ export function IdeaDetailPage() {
             {/* Review progress stepper — visible to all roles */}
             {idea.status !== "Draft" && <ReviewStepper status={idea.status} />}
 
+            {/* Blind review notice for submitter */}
+            {!isAdminEvaluator && idea.isBlindReview && (
+              <div className="flex items-start gap-2 rounded-lg border border-purple-200 dark:border-purple-800 bg-purple-50 dark:bg-purple-900/20 px-4 py-3 text-sm text-purple-700 dark:text-purple-300">
+                <span className="mt-0.5">🔒</span>
+                <p>
+                  <strong>Blind review enabled.</strong> Reviewers won't see
+                  your name until a final decision is made.
+                </p>
+              </div>
+            )}
+
             {/* Admin stage action panel */}
             {isAdminEvaluator && (advanceable || rejectable) && (
               <div className="rounded-lg border bg-card p-4 space-y-3">
-                <h2 className="font-semibold text-base">Review Actions</h2>
+                <div className="flex items-center justify-between">
+                  <h2 className="font-semibold text-base">Review Actions</h2>
+
+                  {/* Blind review per-idea toggle */}
+                  <label className="flex items-center gap-2 cursor-pointer select-none">
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={idea.isBlindReview}
+                      disabled={blindToggleLoading}
+                      onClick={handleToggleBlindReview}
+                      className={[
+                        "relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50",
+                        idea.isBlindReview
+                          ? "bg-purple-500"
+                          : "bg-muted-foreground/30",
+                      ].join(" ")}
+                    >
+                      <span
+                        className={[
+                          "inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform",
+                          idea.isBlindReview
+                            ? "translate-x-[18px]"
+                            : "translate-x-[3px]",
+                        ].join(" ")}
+                      />
+                    </button>
+                    <span className="text-xs text-muted-foreground">
+                      🔒 Blind review
+                    </span>
+                  </label>
+                </div>
+
+                {blindToggleError && (
+                  <p className="text-sm text-destructive">{blindToggleError}</p>
+                )}
 
                 <textarea
                   className="w-full rounded-md border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-none"

@@ -9,6 +9,7 @@ public class IdeaResponse
     public string Status { get; set; } = string.Empty;
     public int SubmitterId { get; set; }
     public string SubmitterName { get; set; } = string.Empty;
+    public bool IsBlindReview { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
     public List<AttachmentDto> Attachments { get; set; } = [];
@@ -23,6 +24,7 @@ public class IdeaSummaryResponse
     public string Category { get; set; } = string.Empty;
     public string Status { get; set; } = string.Empty;
     public string SubmitterName { get; set; } = string.Empty;
+    public bool IsBlindReview { get; set; }
     public DateTime CreatedAt { get; set; }
 }
 

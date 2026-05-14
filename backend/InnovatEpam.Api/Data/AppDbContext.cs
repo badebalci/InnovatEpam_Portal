@@ -11,6 +11,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Evaluation> Evaluations => Set<Evaluation>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<StageTransition> StageTransitions => Set<StageTransition>();
+    public DbSet<AppSetting> AppSettings => Set<AppSetting>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -114,5 +115,10 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             .WithMany(u => u.StageTransitions)
             .HasForeignKey(st => st.EvaluatorId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        // AppSetting
+        modelBuilder.Entity<AppSetting>()
+            .HasIndex(s => s.Key)
+            .IsUnique();
     }
 }

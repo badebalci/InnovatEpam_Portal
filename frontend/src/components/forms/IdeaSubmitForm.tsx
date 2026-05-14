@@ -101,6 +101,7 @@ export function IdeaSubmitForm() {
   const [savingDraft, setSavingDraft] = useState(false);
   const [successId, setSuccessId] = useState<number | null>(null);
   const [savedAsDraft, setSavedAsDraft] = useState(false);
+  const [isBlindReview, setIsBlindReview] = useState(false);
 
   function setCF(key: keyof CategoryFields, value: string) {
     setCategoryFields((prev) => ({ ...prev, [key]: value }));
@@ -229,6 +230,7 @@ export function IdeaSubmitForm() {
     formData.append("title", title.trim());
     formData.append("description", fullDescription);
     formData.append("category", category);
+    formData.append("isBlindReview", String(isBlindReview));
     for (const f of files) formData.append("files", f);
 
     try {
@@ -283,6 +285,7 @@ export function IdeaSubmitForm() {
     formData.append("description", fullDescription);
     formData.append("category", category);
     formData.append("saveAsDraft", "true");
+    formData.append("isBlindReview", String(isBlindReview));
     for (const f of files) formData.append("files", f);
 
     try {
@@ -615,6 +618,35 @@ export function IdeaSubmitForm() {
         {errors.files && (
           <p className="text-xs text-destructive">{errors.files}</p>
         )}
+      </div>
+
+      {/* Blind review toggle */}
+      <div className="rounded-lg border bg-muted/40 p-4 space-y-1">
+        <label className="flex items-center gap-3 cursor-pointer select-none">
+          <button
+            type="button"
+            role="switch"
+            aria-checked={isBlindReview}
+            onClick={() => setIsBlindReview((v) => !v)}
+            className={[
+              "relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-ring",
+              isBlindReview
+                ? "bg-primary"
+                : "bg-muted-foreground/30",
+            ].join(" ")}
+          >
+            <span
+              className={[
+                "inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform",
+                isBlindReview ? "translate-x-[18px]" : "translate-x-[3px]",
+              ].join(" ")}
+            />
+          </button>
+          <span className="text-sm font-medium">Enable blind review</span>
+        </label>
+        <p className="text-xs text-muted-foreground pl-12">
+          Reviewers won't see who submitted this idea until a final decision is made.
+        </p>
       </div>
 
       <div className="flex gap-3">

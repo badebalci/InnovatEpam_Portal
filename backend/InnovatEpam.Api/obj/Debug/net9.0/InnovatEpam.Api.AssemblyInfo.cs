@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("InnovatEpam.Api")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+fac0c1eeb29838b2c80c24448952a26519a4a33d")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+a80dbdbc04128b7e31de7e0365f2b1385e66268b")]
 [assembly: System.Reflection.AssemblyProductAttribute("InnovatEpam.Api")]
 [assembly: System.Reflection.AssemblyTitleAttribute("InnovatEpam.Api")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -16,5 +16,7 @@ public class CreateIdeaRequest
 
     public bool SaveAsDraft { get; set; }
 
+    public bool IsBlindReview { get; set; }
+
     public List<IFormFile>? Files { get; set; }
 }

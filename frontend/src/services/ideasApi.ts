@@ -44,6 +44,11 @@ export const ideasApi = {
     return res.data
   },
 
+  async setBlindReview(id: number, isBlindReview: boolean) {
+    const res = await api.patch<IdeaDetail>(`/ideas/${id}/blind-review`, { isBlindReview })
+    return res.data
+  },
+
   async downloadAttachment(ideaId: number, attachmentId: number, fileName: string) {
     const res = await api.get(`/ideas/${ideaId}/attachment/${attachmentId}`, { responseType: 'blob' })
     const url = URL.createObjectURL(res.data)

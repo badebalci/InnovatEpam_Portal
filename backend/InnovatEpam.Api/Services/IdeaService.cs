@@ -35,6 +35,7 @@ public class IdeaService(AppDbContext db, FileStorageService fileStorage)
             Description = request.Description.Trim(),
             Category = request.Category,
             Status = request.SaveAsDraft ? IdeaStatus.Draft : IdeaStatus.Submitted,
+            IsBlindReview = request.IsBlindReview,
             SubmitterId = submitterId
         };
 
@@ -101,10 +102,22 @@ public class IdeaService(AppDbContext db, FileStorageService fileStorage)
                 Title = i.Title,
                 Category = i.Category.ToString(),
                 Status = i.Status.ToString(),
+                IsBlindReview = i.IsBlindReview,
                 SubmitterName = i.Submitter.FullName,
                 CreatedAt = i.CreatedAt
             })
             .ToListAsync();
+
+        // Apply blind masking for AdminEvaluators
+        if (role == "AdminEvaluator")
+        {
+            var finalStatuses = new[] { "Accepted", "Rejected" };
+            foreach (var item in items)
+            {
+                if (item.IsBlindReview && !finalStatuses.Contains(item.Status))
+                    item.SubmitterName = "Anonymous";
+            }
+        }
 
         return new IdeaListResponse
         {
@@ -135,18 +148,24 @@ public class IdeaService(AppDbContext db, FileStorageService fileStorage)
         if (role == "Submitter" && idea.SubmitterId != userId)
             return (null, true); // Forbidden
 
-        return (MapToResponse(idea, idea.Submitter), false);
+        var masked = role == "AdminEvaluator"
+            && idea.IsBlindReview
+            && idea.Status != IdeaStatus.Accepted
+            && idea.Status != IdeaStatus.Rejected;
+
+        return (MapToResponse(idea, idea.Submitter, masked), false);
     }
 
-    private static IdeaResponse MapToResponse(Idea idea, User submitter) => new()
+    private static IdeaResponse MapToResponse(Idea idea, User submitter, bool maskSubmitter = false) => new()
     {
         Id = idea.Id,
         Title = idea.Title,
         Description = idea.Description,
         Category = idea.Category.ToString(),
         Status = idea.Status.ToString(),
-        SubmitterId = idea.SubmitterId,
-        SubmitterName = submitter.FullName,
+        IsBlindReview = idea.IsBlindReview,
+        SubmitterId = maskSubmitter ? 0 : idea.SubmitterId,
+        SubmitterName = maskSubmitter ? "Anonymous Submitter" : submitter.FullName,
         CreatedAt = idea.CreatedAt,
         UpdatedAt = idea.UpdatedAt,
         Attachments = idea.Attachments.Select(a => new AttachmentDto
@@ -255,5 +274,26 @@ public class IdeaService(AppDbContext db, FileStorageService fileStorage)
         if (attachment is null) return (null, null, null, false);
 
         return (attachment.StoragePath, attachment.OriginalFileName, attachment.ContentType, false);
+    }
+
+    public async Task<(IdeaResponse? Response, string? Error)> SetBlindReviewAsync(int id, bool isBlindReview)
+    {
+        var idea = await db.Ideas
+            .Include(i => i.Submitter)
+            .Include(i => i.Attachments)
+            .Include(i => i.Evaluation)
+                .ThenInclude(e => e!.Evaluator)
+            .Include(i => i.StageTransitions.OrderBy(st => st.TransitionedAt))
+                .ThenInclude(st => st.Evaluator)
+            .FirstOrDefaultAsync(i => i.Id == id);
+
+        if (idea is null) return (null, "Idea not found.");
+
+        idea.IsBlindReview = isBlindReview;
+        idea.UpdatedAt = DateTime.UtcNow;
+        await db.SaveChangesAsync();
+
+        // Admin toggling always sees unmasked response
+        return (MapToResponse(idea, idea.Submitter, maskSubmitter: false), null);
     }
 }

@@ -27,6 +27,7 @@ export interface IdeaSummary {
   category: IdeaCategory
   status: IdeaStatus
   submitterName: string
+  isBlindReview: boolean
   createdAt: string
 }
 
@@ -59,6 +60,7 @@ export interface IdeaDetail {
   status: IdeaStatus
   submitterId: number
   submitterName: string
+  isBlindReview: boolean
   createdAt: string
   updatedAt: string
   attachments: AttachmentInfo[]
@@ -92,4 +94,8 @@ export interface LoginPayload {
 export interface EvaluatePayload {
   decision: EvaluationDecision
   comment: string
+}
+
+export interface AppSettings {
+  blindReviewDefault: boolean
 }

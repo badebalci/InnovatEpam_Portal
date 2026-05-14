@@ -155,6 +155,7 @@ public class EvaluationService(AppDbContext db)
         Description = idea.Description,
         Category = idea.Category.ToString(),
         Status = idea.Status.ToString(),
+        IsBlindReview = idea.IsBlindReview,
         SubmitterId = idea.SubmitterId,
         SubmitterName = idea.Submitter.FullName,
         CreatedAt = idea.CreatedAt,

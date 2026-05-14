@@ -89,6 +89,15 @@ public class IdeasController(IdeaService ideaService, EvaluationService evaluati
         return NoContent();
     }
 
+    [HttpPatch("{id:int}/blind-review")]
+    [Authorize(Roles = "AdminEvaluator")]
+    public async Task<IActionResult> SetBlindReview(int id, [FromBody] SetBlindReviewRequest request)
+    {
+        var (response, error) = await ideaService.SetBlindReviewAsync(id, request.IsBlindReview);
+        if (response is null) return NotFound(new { error });
+        return Ok(response);
+    }
+
     [HttpPatch("{id:int}/advance")]
     [Authorize(Roles = "AdminEvaluator")]
     public async Task<IActionResult> AdvanceStage(int id, [FromBody] StageTransitionRequest request)

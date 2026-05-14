@@ -16,7 +16,10 @@ export function AppShell({ children }: AppShellProps) {
     { to: "/ideas/new", label: "Submit Idea" },
   ];
 
-  const adminLinks = [{ to: "/admin", label: "Admin Dashboard" }];
+  const adminLinks = [
+    { to: "/admin", label: "Admin Dashboard" },
+    { to: "/admin/settings", label: "Settings" },
+  ];
 
   const links = user?.role === "AdminEvaluator" ? adminLinks : submitterLinks;
 

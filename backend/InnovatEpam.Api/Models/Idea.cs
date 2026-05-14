@@ -16,6 +16,8 @@ public class Idea
 
     public IdeaStatus Status { get; set; } = IdeaStatus.Submitted;
 
+    public bool IsBlindReview { get; set; } = false;
+
     public int SubmitterId { get; set; }
     public User Submitter { get; set; } = null!;
 

@@ -17,6 +17,7 @@ builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<IdeaService>();
 builder.Services.AddScoped<EvaluationService>();
 builder.Services.AddScoped<FileStorageService>();
+builder.Services.AddScoped<SettingsService>();
 
 var jwtSecret = builder.Configuration["Jwt:Secret"]
     ?? throw new InvalidOperationException("JWT Secret not configured.");

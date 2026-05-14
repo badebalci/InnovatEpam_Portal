@@ -8,6 +8,7 @@ import { IdeaSubmitPage } from "./pages/IdeaSubmitPage";
 import { IdeaDetailPage } from "./pages/IdeaDetailPage";
 import { IdeaEditPage } from "./pages/IdeaEditPage";
 import { AdminDashboard } from "./pages/AdminDashboard";
+import { AdminSettingsPage } from "./pages/AdminSettingsPage";
 
 export default function App() {
   return (
@@ -60,6 +61,14 @@ export default function App() {
             element={
               <ProtectedRoute allowedRoles={["AdminEvaluator"]}>
                 <AdminDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/settings"
+            element={
+              <ProtectedRoute allowedRoles={["AdminEvaluator"]}>
+                <AdminSettingsPage />
               </ProtectedRoute>
             }
           />

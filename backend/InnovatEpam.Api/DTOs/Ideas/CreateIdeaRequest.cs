@@ -14,5 +14,5 @@ public class CreateIdeaRequest
     [Required]
     public IdeaCategory Category { get; set; }
 
-    public IList<IFormFile>? Files { get; set; }
+    public List<IFormFile>? Files { get; set; }
 }

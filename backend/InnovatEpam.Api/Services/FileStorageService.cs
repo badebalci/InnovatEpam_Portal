@@ -29,7 +29,7 @@ public class FileStorageService(IConfiguration configuration, ILogger<FileStorag
         await using var stream = File.Create(dest);
         await file.CopyToAsync(stream);
 
-        logger.LogInformation("Saved attachment for idea {IdeaId}: {FileName}", ideaId, safeFileName);
+        logger.LogInformation("Saved attachment for idea {IdeaId}: {FileName}", ideaId, file.FileName);
         return dest;
     }
 

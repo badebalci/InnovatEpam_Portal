@@ -43,7 +43,6 @@ export interface IdeaDetail {
   submitterName: string
   createdAt: string
   updatedAt: string
-  attachment: AttachmentInfo | null
   attachments: AttachmentInfo[]
   evaluation: EvaluationInfo | null
 }

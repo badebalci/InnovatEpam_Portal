@@ -1,10 +1,14 @@
+using InnovatEpam.Api.Data;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
 namespace InnovatEpam.Api.Migrations
 {
-    /// <inheritdoc />
+    [DbContext(typeof(AppDbContext))]
+    [Migration("20260514130000_AllowMultipleAttachments")]
     public partial class AllowMultipleAttachments : Migration
     {
         /// <inheritdoc />

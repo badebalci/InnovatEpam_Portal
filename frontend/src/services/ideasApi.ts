@@ -21,14 +21,12 @@ export const ideasApi = {
   },
 
   async createIdea(formData: FormData) {
-    const res = await api.post<IdeaDetail>('/ideas', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    })
+    const res = await api.post<IdeaDetail>('/ideas', formData)
     return res.data
   },
 
   async downloadAttachment(ideaId: number, attachmentId: number, fileName: string) {
-    const res = await api.get(`/ideas/${ideaId}/attachments/${attachmentId}`, { responseType: 'blob' })
+    const res = await api.get(`/ideas/${ideaId}/attachment/${attachmentId}`, { responseType: 'blob' })
     const url = URL.createObjectURL(res.data)
     const a = document.createElement('a')
     a.href = url

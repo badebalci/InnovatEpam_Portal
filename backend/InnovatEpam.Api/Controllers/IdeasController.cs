@@ -95,7 +95,7 @@ public class IdeasController(IdeaService ideaService, EvaluationService evaluati
         return Ok(response);
     }
 
-    [HttpGet("{id:int}/attachments/{attachmentId:int}")]
+    [HttpGet("{id:int}/attachment/{attachmentId:int}")]
     public async Task<IActionResult> DownloadAttachment(int id, int attachmentId)
     {
         var userId = GetUserId();
